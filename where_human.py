@@ -17,12 +17,12 @@ from IPython.display import display
 
 #theta, phi = 0,
 # altitude, latitude, longitude = lat, long, height, a, b, c, d = q, qx, qy, qz,
-# xn, yn = 9152/2, 6944/2
+# xn, yn = 9152/2, 6944/2 - this is the centre of the picture
 def getCoordinates(theta, phi, altitude, latitude, longitude, a, b, c, d, xn, yn, COM_PORT):
     ser = serial.Serial(COM_PORT, 9600, timeout=1)
-    q1 = Quaternion(axis=[1, 0, 0], angle=theta)  # first angle from Klara
-    q2 = Quaternion(axis=[0, 0, 1], angle=phi)  # second angle from Klara
-    q3 = Quaternion(a, b, c, d)
+    q1 = Quaternion(axis=[1, 0, 0], angle=theta)  # first angle from servo, to be equal zero in the test campgain as the servo doesn't move
+    q2 = Quaternion(axis=[0, 0, 1], angle=phi)  # second angle from servo, to be equal zero in the test campgain as the servo doesn't move
+    q3 = Quaternion(a, d, c, b) #b and d are swpaped here bc the 9DOF is not correctly positioned in the CanSat, thus I swapped the x-axis with the z-axis. If it still doesn't work, I recommend trying swapping d with c or adding minus sign before either b or d.
     P = (2 * altitude * math.tan(84 / 360 * math.pi)) / math.sqrt((9152 * 9152 + 6944 * 6944))
     qf = q1 * q2 * q3
     # qf = Quaternion(1, 0, 0, 0)
@@ -39,7 +39,7 @@ def getCoordinates(theta, phi, altitude, latitude, longitude, a, b, c, d, xn, yn
     latitude = latitude + dy / r / math.pi * 180
 
     longitude = longitude + dx / r / math.cos(latitude / 180 * math.pi) / math.pi * 180
-    print(longitude, latitude)
-    return latitude, longitude
+    #print(longitude, latitude)
+    return latitude, longitude #coordinates of the newly found point
 
 
