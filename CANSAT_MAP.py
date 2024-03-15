@@ -27,14 +27,15 @@ from receiver_pyth import LoRa
 class SensorDataWidget(QWidget):
     def __init__(self):
         super().__init__()
-
-        self.temperature_label = QLabel("Temperature: N/A")
-        self.pressure_label = QLabel("Pressure: N/A")
-        self.height_label = QLabel("Height: N/A")
-        self.rssi_label = QLabel("RSSI: N/A")
-        self.human_label = QLabel("Latest human detected: N/A")
+        self.time_label = QLabel("Time[s]: ")
+        self.temperature_label = QLabel("Temperature[C]: ")
+        self.pressure_label = QLabel("Pressure[hPa]: ")
+        self.height_label = QLabel("Height[m]: ")
+        self.rssi_label = QLabel("RSSI: ")
+        self.human_label = QLabel("Latest human detected[lat, lon]: ")
 
         layout = QVBoxLayout()
+        layout.addWidget(self.time_label)
         layout.addWidget(self.temperature_label)
         layout.addWidget(self.pressure_label)
         layout.addWidget(self.height_label)
@@ -45,11 +46,12 @@ class SensorDataWidget(QWidget):
 
     def update_widget(self, data, selected_com_port):
         if data:
+            self.time_label.setText(f"Time[s]: {data[0]}")
             self.temperature_label.setText(f"Temperature: {data[1]}")
             self.pressure_label.setText(f"Pressure: {data[2]}")
             self.height_label.setText(f"Height: {data[12]}")
             self.rssi_label.setText(f"RSSI: {data[13]}")
-            self.human_label.setText(f"Latest human detected: ", wh.getCoordinates(0, 0, data[12], data[10], data[11], data[6], data[7], data[8], data[9], 9152/2, 6944/2, selected_com_port))
+            self.human_label.setText(f"Latest human detected: {wh.getCoordinates(0, 0, data[12], data[10], data[11], data[6], data[7], data[8], data[9], 9152/2, 6944/2, selected_com_port)}")
 
 
 class RealTimePlot(FigureCanvas):
@@ -70,7 +72,6 @@ class RealTimePlot(FigureCanvas):
 class RealTimeMap(QWidget):
     def __init__(self):
         super().__init__()
-
         self.zoom_level = 10  # Adjust the zoom level here
         self.map_object = folium.Map(location=[0, 0], zoom_start=self.zoom_level)
         self.marker_cluster = MarkerCluster().add_to(self.map_object)
@@ -91,6 +92,7 @@ class RealTimeMap(QWidget):
         self.timer.start(1000)  # Update every 1 second
 
     def init_ui(self):
+
         self.webview = QWebEngineView()
         self.webview.setHtml(self.map_object._repr_html_())
 
@@ -112,9 +114,9 @@ class RealTimeMap(QWidget):
         self.RSSI_plot = RealTimePlot(self, width=5, height=4, dpi=100)
 
         self.rssi_label = QLabel("RSSI:")
-        self.temperature_label = QLabel("Temperature:")
-        self.pressure_label = QLabel("Pressure:")
-        self.height_label = QLabel("Height:")
+        self.temperature_label = QLabel("Temperature[C]:")
+        self.pressure_label = QLabel("Pressure[hPa]:")
+        self.height_label = QLabel("Height[m]:")
 
         controls_layout = QHBoxLayout()
 
@@ -131,11 +133,12 @@ class RealTimeMap(QWidget):
         plots_layout.addWidget(self.RSSI_plot)
 
         layout = QVBoxLayout()
-        layout.addLayout(buttons_layout)  # Add buttons layout above the map
+
         layout.addWidget(self.webview)
         layout.addLayout(controls_layout)
         layout.addLayout(labels_layout)
         layout.addLayout(plots_layout)
+        self.setLayout(layout)
 
         # New widget for sensor data
         self.sensor_data_widget = SensorDataWidget()
@@ -146,6 +149,7 @@ class RealTimeMap(QWidget):
         sensor_frame.layout().addWidget(self.sensor_data_widget)
         sensor_frame.setFrameShape(QFrame.Box)
         sensor_frame.setLineWidth(1)
+        sensor_frame.setFixedHeight((int((self.height()-1)/ 2)))
 
         # Add map and sensor data frame in the same row
         row_layout = QHBoxLayout()
@@ -163,6 +167,20 @@ class RealTimeMap(QWidget):
             if self.lora:
                 self.update_map()
                 self.update_plots()
+                self.update_widget(self, self.lora)
+
+    def update_widget(self, data, selected_com_port):
+
+        if data:
+            self.time_label.setText(f"Time[s]: {data[0]}")
+            self.temperature_label.setText(f"Temperature: {data[1]}")
+            self.pressure_label.setText(f"Pressure: {data[2]}")
+            self.height_label.setText(f"Height: {data[12]}")
+            self.rssi_label.setText(f"RSSI: {data[13]}")
+            self.human_label.setText(f"Latest human detected: ", wh.getCoordinates(0, 0, data[12], data[10], data[11],
+            data[6], data[7], data[8], data[9], 9152/2, 6944/2, selected_com_port))
+
+
 
     def update_map(self):
         if self.lora:
