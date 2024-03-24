@@ -8,7 +8,10 @@ import math
 import numpy as np
 import serial
 from serial.tools.list_ports import comports
+import csv
 
+
+filename = "dataCanSat"
 def getCoordinate(theta, phi, altitude, latitude, longitude, a, b, c, d, xn, yn):
     # theta, phi - angles from the servo, in this case equal zero; altitude - here 35, latitude, longitude - from GPS, here 52.257071902441425, 20.992438191518758; a, b, c, d - data from 9DOF; xn, yn - here 9152/2 and 6944/2
     q1 = Quaternion(axis=[1, 0, 0], angle=theta)  # first angle from Klara
@@ -46,6 +49,10 @@ def update_table(data):
     # relevant_labels = ['Time', 'Temperature', 'Pressure', 'Temperature', 'Latitude', 'Longitude', 'Height', 'RSSI']
     for label in data:
         treeview.insert('', 'end', values=(label, data[label]))
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
+        # Write all rows to the CSV file
+        writer.writerows(data)
 
 global local_history
 local_history = []
@@ -137,15 +144,15 @@ def LoRa():
             # Create a dictionary to store data labels and values
             data_dict = {}
             valid_data = False
-            if len(data) == 3:
-                label = ['Time', 'Temperature', 'Pressure']
+            if len(data) == 4:
+                label = ['Time', 'Temperature', 'Pressure', 'RSSI']
                 valid_data = True
             if len(data) == 11:
                 label = ['Time', 'Temperature', 'Pressure', 'q', 'qx', 'qy', 'qz', 'Latitude', 'Longitude', 'Height', 'RSSI']
                 valid_data = True
-            if len(data) == 5:
+            if len(data) == 6:
                 valid_data = True
-                label = ['Time', 'Temperature', 'Pressure', 'Latitude', 'Longitude']
+                label = ['Time', 'Temperature', 'Pressure', 'Latitude', 'Longitude', 'RSSI']
 
             if valid_data:
                 hours = int(data[0][:2])
