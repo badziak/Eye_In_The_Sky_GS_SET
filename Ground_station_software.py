@@ -16,12 +16,12 @@ def getCoordinate(theta, phi, altitude, latitude, longitude, a, b, c, d, xn, yn)
     # theta, phi - angles from the servo, in this case equal zero; altitude - here 35, latitude, longitude - from GPS, here 52.257071902441425, 20.992438191518758; a, b, c, d - data from 9DOF; xn, yn - here 9152/2 and 6944/2
     q1 = Quaternion(axis=[1, 0, 0], angle=theta)  # first angle from Klara
     q2 = Quaternion(axis=[0, 0, 1], angle=phi)  # second angle from Klara
-    q3 = Quaternion(a, b, c, d)  # switched because of the 9DOF orientation
-    q4 = Quaternion(axis=[1, 0, 0], angle=math.pi)
+    q3 = Quaternion(a, b, c, d)  
+    q4 = Quaternion(axis=[1, 0, 0], angle=math.pi/2)
     P = (2 * altitude * math.tan(84 / 360 * math.pi)) / math.sqrt((9152 * 9152 + 6944 * 6944))
-    qf = q3*q4 #final version
+    qf = q1*q2*q3*q4 #final version
 
-    # qf = Quaternion(1, 0, 0, 0)
+    
     v = np.array([P * (9152 / 2 - xn) / altitude, P * (6944 / 2 - yn) / altitude, -1])
     v_prime = qf.rotate(v)
     if v_prime[2] >= 0:
@@ -36,7 +36,7 @@ def getCoordinate(theta, phi, altitude, latitude, longitude, a, b, c, d, xn, yn)
     latitude = latitude + dy / r / math.pi * 180
 
     longitude = longitude + dx / r / math.cos(latitude / 180 * math.pi) / math.pi * 180
-    return latitude, longitude  # let's print these values
+    return latitude, longitude  
 
 
 # Function definitions (update_table, add_data_to_plots, add_point, LoRa) remain unchanged
